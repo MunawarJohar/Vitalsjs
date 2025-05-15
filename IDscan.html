@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MRZ Scanner Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .logo-img {
+            height: 40px;
+        }
+        
+        .header {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: #2c3e50;
+        }
+        
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        
+        .scanner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .camera-selection {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .selection-group-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .camera-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .camera-option {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .camera-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .camera-option.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .checkmark {
+            color: #2196f3;
+            display: none;
+        }
+        
+        .camera-option.selected .checkmark {
+            display: block;
+        }
+        
+        .scan-button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .scan-button:hover {
+            background-color: #0d8bf2;
+        }
+        
+        .results-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .results-header {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .result-field {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            width: 150px;
+            color: #555;
+        }
+        
+        .field-value {
+            flex: 1;
+            word-break: break-word;
+        }
+        
+        .back-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .back-button:hover {
+            background-color: #e53935;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                font-size: 24px;
+            }
+            
+            .camera-selection {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">
+            <img class="logo-img" src="https://www.dynamsoft.com/images/logo/dynamsoft-logo.svg" alt="Dynamsoft Logo" />
+        </div>
+
+        <div class="header">MRZ Scanner Demo</div>
+        <div class="description">
+            Scan the Machine-Readable Zone (MRZ) on passports, ID cards, and travel documents
+        </div>
+
+        <div class="scanner-container">
+            <div class="camera-selection">
+                <div class="selection-group-title">Available Cameras:</div>
+                <div class="camera-options">
+                    <div class="camera-option selected" data-camera-type="live">
+                        <span>Use Live Camera</span>
+                        <span class="checkmark">✓</span>
+                    </div>
+                    <div class="camera-option" data-camera-type="virtual1">
+                        <span>Virtual Camera 1: Passport</span>
+                        <span class="checkmark">✓</span>
+                    </div>
+                    <div class="camera-option" data-camera-type="virtual2">
+                        <span>Virtual Camera 2: ID (TD1)</span>
+                        <span class="checkmark">✓</span>
+                    </div>
+                    <div class="camera-option" data-camera-type="virtual3">
+                        <span>Virtual Camera 3: ID (TD2)</span>
+                        <span class="checkmark">✓</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="scan-button" id="start-scan">Start Scanning</button>
+        </div>
+
+        <div class="results-container" id="results-view">
+            <div class="results-header">Scan Results</div>
+            <div id="result-fields">
+                <!-- Results will be populated here -->
+            </div>
+            <button class="back-button" id="back-button">Scan Again</button>
+        </div>
+    </div>
+
+    <div class="footer">Powered by Dynamsoft MRZ Scanner</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/dynamsoft-mrz-scanner@2.0.0/dist/mrz-scanner.bundle.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // UI Elements
+            const startScanButton = document.getElementById('start-scan');
+            const backButton = document.getElementById('back-button');
+            const resultsView = document.getElementById('results-view');
+            const resultFieldsContainer = document.getElementById('result-fields');
+            const cameraOptions = document.querySelectorAll('.camera-option');
+            
+            // Scanner configuration
+            const mrzscanner = new Dynamsoft.MRZScanner({
+                license: "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAwLTEwMzAwNjk2NyIsIm1haW5TZXJ2ZXJVUkwiOiJodHRwczovL21sdHMuZHluYW1zb2Z0LmNvbS8iLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMCIsInNlc3Npb25QYXNzd29yZCI6IkVUSHZVNlNPV3F3ZiIsInN0YW5kYnlTZXJ2ZXJVUkwiOiJodHRwczovL3NsdHMuZHluYW1zb2Z0LmNvbS8iLCJjaGVja0NvZGUiOjM5OTMzODU2Nn0=",
+                resultViewConfig: {
+                    toolbarButtonsConfig: {
+                        done: {
+                            visible: false
+                        }
+                    }
+                }
+            });
+            
+            let selectedCamera = null;
+
+            // Camera selection
+            cameraOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    cameraOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Update selected camera
+                    selectedCamera = this.getAttribute('data-camera-type');
+                    
+                    // Update button text
+                    const isLive = selectedCamera === 'live';
+                    startScanButton.textContent = isLive ? 'Scan with Live Camera' : `Scan with ${this.textContent.trim()}`;
+                    startScanButton.style.backgroundColor = isLive ? '#2196f3' : '#4CAF50';
+                });
+            });
+
+            // Start scan button handler
+            startScanButton.addEventListener('click', async function() {
+                try {
+                    // Show loading state
+                    startScanButton.disabled = true;
+                    startScanButton.textContent = 'Initializing Scanner...';
+                    
+                    // Launch the scanner and wait for the result
+                    const result = await mrzscanner.launch(selectedCamera);
+                    
+                    // Process and display results
+                    displayResults(result);
+                    
+                } catch (error) {
+                    console.error('Error scanning:', error);
+                    alert('Scanning failed: ' + error.message);
+                } finally {
+                    // Reset button state
+                    startScanButton.disabled = false;
+                    startScanButton.textContent = selectedCamera === 'live' ? 
+                        'Scan with Live Camera' : 
+                        `Scan with ${document.querySelector('.camera-option.selected').textContent.trim()}`;
+                }
+            });
+
+            // Back button handler
+            backButton.addEventListener('click', function() {
+                resultsView.style.display = 'none';
+            });
+
+            // Display scan results
+            function displayResults(result) {
+                // Clear previous results
+                resultFieldsContainer.innerHTML = '';
+                
+                // Common MRZ fields
+                const fieldsToDisplay = [
+                    { label: 'Document Type', key: 'documentType' },
+                    { label: 'Issuing Country', key: 'issuingCountry' },
+                    { label: 'Surname', key: 'surname' },
+                    { label: 'Given Name', key: 'givenName' },
+                    { label: 'Document Number', key: 'documentNumber' },
+                    { label: 'Nationality', key: 'nationality' },
+                    { label: 'Date of Birth', key: 'dateOfBirth' },
+                    { label: 'Sex', key: 'sex' },
+                    { label: 'Date of Expiry', key: 'dateOfExpiry' },
+                    { label: 'Personal Number', key: 'personalNumber' },
+                    { label: 'MRZ Text', key: 'mrzText' }
+                ];
+                
+                // Create result fields
+                fieldsToDisplay.forEach(field => {
+                    if (result[field.key]) {
+                        const fieldElement = document.createElement('div');
+                        fieldElement.className = 'result-field';
+                        
+                        const labelElement = document.createElement('div');
+                        labelElement.className = 'field-label';
+                        labelElement.textContent = field.label;
+                        
+                        const valueElement = document.createElement('div');
+                        valueElement.className = 'field-value';
+                        valueElement.textContent = result[field.key];
+                        
+                        fieldElement.appendChild(labelElement);
+                        fieldElement.appendChild(valueElement);
+                        resultFieldsContainer.appendChild(fieldElement);
+                    }
+                });
+                
+                // Show results view
+                resultsView.style.display = 'block';
+                
+                // Scroll to results
+                resultsView.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Check if running on mobile device
+            function isMobileDevice() {
+                return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+            }
+
+            // Show appropriate interface based on device
+            if (isMobileDevice()) {
+                // Mobile-specific adjustments can be made here
+                document.querySelector('.description').textContent += 
+                    '\nFor best results, position the document on a flat surface with good lighting.';
+            }
+        });
+    </script>
+</body>
+</html>

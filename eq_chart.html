@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Table with Calculations</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+                background: linear-gradient(133deg, #ff0000, #FF5722, #2196F3, #9C27B0);
+    color: #fff;
+        }
+        td {
+            border: 1px solid black;
+            padding: 3px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<button onclick="downloadEditedTable()">Download Table</button>
+
+    <script>
+        // Create the table element
+        const table = document.createElement("table");
+table.id = "myTable";
+        // Generate rows and columns
+        for (let i = 0; i <= 50; i++) { // Include header row
+            const row = document.createElement("tr");
+            for (let j = 0; j <= 50; j++) { // Include header column
+                const cell = document.createElement("td");
+
+                if (i === 0 && j > 0) {
+                    // Fill the first row (excluding the first cell)
+                    cell.textContent = j;
+                } else if (j === 0 && i > 0) {
+                    // Fill the first column (excluding the first cell)
+                    cell.textContent = i;
+                } else if (i > 0 && j > 0) {
+                    // Fill other cells with the equation result
+                    cell.textContent = (i + j) / 2;
+                } else {
+                    // Keep the top-left corner blank
+                    cell.textContent = "";
+                }
+                cell.setAttribute("contenteditable", "true");
+                row.appendChild(cell);
+            }
+            table.appendChild(row);
+        }
+
+        // Append the table to the document body
+        document.body.appendChild(table);
+
+function downloadEditedTable() {
+    // Get the table element
+    const table = document.getElementById("myTable");
+    
+    // Wrap the table in basic HTML structure
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Edited Table</title>
+        </head>
+        <body>
+            ${table.outerHTML}
+        </body>
+        </html>
+    `;
+
+    // Create a Blob with the HTML content
+    const blob = new Blob([htmlContent], { type: "text/html" });
+
+    // Create a temporary link element
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "table.html";
+
+    // Programmatically click the link to trigger the download
+    a.click();
+
+    // Clean up the URL object
+    URL.revokeObjectURL(a.href);
+}
+
+    </script>
+
+</body>
+</html>
