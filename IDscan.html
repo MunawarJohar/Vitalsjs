@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MRZ Scanner Demo</title>
+    <title>Insurance ID Verification</title>
     <style>
         * {
             box-sizing: border-box;
@@ -47,8 +47,29 @@
             color: #555;
         }
         
-        .scanner-container {
+        .auth-container {
             display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .auth-button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .auth-button:hover {
+            background-color: #0d8bf2;
+        }
+        
+        .scanner-container {
+            display: none;
             flex-direction: column;
             align-items: center;
             margin-bottom: 30px;
@@ -187,6 +208,24 @@
             font-size: 14px;
         }
         
+        .status-message {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status-success {
+            background-color: #e6f4ea;
+            color: #0d652d;
+        }
+        
+        .status-error {
+            background-color: #fce8e6;
+            color: #d93025;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -209,12 +248,18 @@
             <img class="logo-img" src="https://www.dynamsoft.com/images/logo/dynamsoft-logo.svg" alt="Dynamsoft Logo" />
         </div>
 
-        <div class="header">MRZ Scanner Demo</div>
+        <div class="header">Insurance ID Verification</div>
         <div class="description">
-            Scan the Machine-Readable Zone (MRZ) on passports, ID cards, and travel documents
+            Verify your insurance ID by scanning the Machine-Readable Zone (MRZ) on your ID card
         </div>
 
-        <div class="scanner-container">
+        <div class="auth-container">
+            <button class="auth-button" id="insurance-login">Insurance ID Login</button>
+        </div>
+
+        <div class="status-message" id="status-message"></div>
+
+        <div class="scanner-container" id="scanner-container">
             <div class="camera-selection">
                 <div class="selection-group-title">Available Cameras:</div>
                 <div class="camera-options">
@@ -241,11 +286,11 @@
         </div>
 
         <div class="results-container" id="results-view">
-            <div class="results-header">Scan Results</div>
+            <div class="results-header">ID Verification Results</div>
             <div id="result-fields">
                 <!-- Results will be populated here -->
             </div>
-            <button class="back-button" id="back-button">Scan Again</button>
+            <button class="back-button" id="back-button">Verify Another ID</button>
         </div>
     </div>
 
@@ -255,11 +300,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // UI Elements
+            const insuranceLoginBtn = document.getElementById('insurance-login');
+            const scannerContainer = document.getElementById('scanner-container');
             const startScanButton = document.getElementById('start-scan');
             const backButton = document.getElementById('back-button');
             const resultsView = document.getElementById('results-view');
             const resultFieldsContainer = document.getElementById('result-fields');
             const cameraOptions = document.querySelectorAll('.camera-option');
+            const statusMessage = document.getElementById('status-message');
             
             // Scanner configuration
             const mrzscanner = new Dynamsoft.MRZScanner({
@@ -274,6 +322,42 @@
             });
             
             let selectedCamera = null;
+
+            // Show status message
+            function showStatus(message, isSuccess) {
+                statusMessage.textContent = message;
+                statusMessage.className = isSuccess ? 'status-message status-success' : 'status-message status-error';
+                statusMessage.style.display = 'block';
+                
+                // Hide after 5 seconds if it's a success message
+                if (isSuccess) {
+                    setTimeout(() => {
+                        statusMessage.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
+            // Insurance ID Login button handler
+            insuranceLoginBtn.addEventListener('click', function() {
+                // Hide results if they're showing
+                resultsView.style.display = 'none';
+                
+                // Show scanner interface
+                scannerContainer.style.display = 'flex';
+                
+                // Reset camera selection
+                cameraOptions.forEach(opt => opt.classList.remove('selected'));
+                document.querySelector('.camera-option[data-camera-type="live"]').classList.add('selected');
+                selectedCamera = 'live';
+                startScanButton.textContent = 'Scan with Live Camera';
+                startScanButton.style.backgroundColor = '#2196f3';
+                
+                // Hide status message
+                statusMessage.style.display = 'none';
+                
+                // Scroll to scanner
+                scannerContainer.scrollIntoView({ behavior: 'smooth' });
+            });
 
             // Camera selection
             cameraOptions.forEach(option => {
@@ -301,15 +385,24 @@
                     startScanButton.disabled = true;
                     startScanButton.textContent = 'Initializing Scanner...';
                     
+                    // Show status
+                    showStatus('Preparing scanner. Please wait...', true);
+                    
                     // Launch the scanner and wait for the result
                     const result = await mrzscanner.launch(selectedCamera);
                     
                     // Process and display results
                     displayResults(result);
                     
+                    // Hide scanner interface
+                    scannerContainer.style.display = 'none';
+                    
+                    // Show success status
+                    showStatus('ID successfully verified!', true);
+                    
                 } catch (error) {
                     console.error('Error scanning:', error);
-                    alert('Scanning failed: ' + error.message);
+                    showStatus(`Scanning failed: ${error.message}`, false);
                 } finally {
                     // Reset button state
                     startScanButton.disabled = false;
@@ -322,6 +415,7 @@
             // Back button handler
             backButton.addEventListener('click', function() {
                 resultsView.style.display = 'none';
+                scannerContainer.style.display = 'flex';
             });
 
             // Display scan results
@@ -329,19 +423,15 @@
                 // Clear previous results
                 resultFieldsContainer.innerHTML = '';
                 
-                // Common MRZ fields
+                // Common MRZ fields for insurance ID verification
                 const fieldsToDisplay = [
                     { label: 'Document Type', key: 'documentType' },
                     { label: 'Issuing Country', key: 'issuingCountry' },
-                    { label: 'Surname', key: 'surname' },
-                    { label: 'Given Name', key: 'givenName' },
+                    { label: 'Last Name', key: 'surname' },
+                    { label: 'First Name', key: 'givenName' },
                     { label: 'Document Number', key: 'documentNumber' },
-                    { label: 'Nationality', key: 'nationality' },
                     { label: 'Date of Birth', key: 'dateOfBirth' },
-                    { label: 'Sex', key: 'sex' },
-                    { label: 'Date of Expiry', key: 'dateOfExpiry' },
-                    { label: 'Personal Number', key: 'personalNumber' },
-                    { label: 'MRZ Text', key: 'mrzText' }
+                    { label: 'Expiry Date', key: 'dateOfExpiry' }
                 ];
                 
                 // Create result fields
@@ -364,11 +454,33 @@
                     }
                 });
                 
+                // Add insurance-specific verification
+                const verificationElement = document.createElement('div');
+                verificationElement.className = 'result-field';
+                
+                const verificationLabel = document.createElement('div');
+                verificationLabel.className = 'field-label';
+                verificationLabel.textContent = 'Verification Status';
+                
+                const verificationValue = document.createElement('div');
+                verificationValue.className = 'field-value';
+                verificationValue.textContent = 'Verified';
+                verificationValue.style.color = '#0d652d';
+                verificationValue.style.fontWeight = 'bold';
+                
+                verificationElement.appendChild(verificationLabel);
+                verificationElement.appendChild(verificationValue);
+                resultFieldsContainer.appendChild(verificationElement);
+                
                 // Show results view
                 resultsView.style.display = 'block';
                 
                 // Scroll to results
                 resultsView.scrollIntoView({ behavior: 'smooth' });
+                
+                // In a real application, you would send these results to your backend
+                // for insurance verification and policy lookup
+                console.log('ID verification results:', result);
             }
 
             // Check if running on mobile device
