@@ -225,6 +225,56 @@
             background-color: #fce8e6;
             color: #d93025;
         }
+
+        /* Card overlay styles */
+        .card-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .card-example {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .card-example img {
+            max-width: 100%;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .close-overlay {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .show-card-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
         
         @media (max-width: 768px) {
             .container {
@@ -283,6 +333,7 @@
             </div>
 
             <button class="scan-button" id="start-scan">Start Scanning</button>
+            <button class="show-card-button" id="show-card">Show Card Example</button>
         </div>
 
         <div class="results-container" id="results-view">
@@ -291,6 +342,17 @@
                 <!-- Results will be populated here -->
             </div>
             <button class="back-button" id="back-button">Verify Another ID</button>
+        </div>
+    </div>
+
+    <!-- Card Overlay -->
+    <div class="card-overlay" id="card-overlay">
+        <div class="card-example">
+            <h3>Position Your Card Like This</h3>
+            <img src="https://www.dynamsoft.com/blog/wp-content/uploads/2021/04/how-to-read-passport-mrz.jpg" alt="Example ID Card with MRZ">
+            <p>Align the bottom part of your ID card (the machine-readable zone) with the scanner area.</p>
+            <p>The MRZ is typically the 2-3 lines of text at the bottom of passports and ID cards.</p>
+            <button class="close-overlay" id="close-overlay">Got It!</button>
         </div>
     </div>
 
@@ -308,6 +370,9 @@
             const resultFieldsContainer = document.getElementById('result-fields');
             const cameraOptions = document.querySelectorAll('.camera-option');
             const statusMessage = document.getElementById('status-message');
+            const showCardButton = document.getElementById('show-card');
+            const cardOverlay = document.getElementById('card-overlay');
+            const closeOverlay = document.getElementById('close-overlay');
             
             // Scanner configuration
             const mrzscanner = new Dynamsoft.MRZScanner({
@@ -336,6 +401,16 @@
                     }, 5000);
                 }
             }
+
+            // Show card overlay
+            showCardButton.addEventListener('click', function() {
+                cardOverlay.style.display = 'flex';
+            });
+
+            // Close card overlay
+            closeOverlay.addEventListener('click', function() {
+                cardOverlay.style.display = 'none';
+            });
 
             // Insurance ID Login button handler
             insuranceLoginBtn.addEventListener('click', function() {
